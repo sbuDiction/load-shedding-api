@@ -3,7 +3,7 @@
 const readline = require('node:readline');
 const { stdin: input, stdout: output } = require('node:process');
 
-const loadSheddingMap = require('./data/loadshedding-map.json');
+// const loadSheddingMap = require('./data/loadshedding-map.json');
 const blocks = require('./data/blocks.json');
 const { findCity, findSuburb } = require('./searchFunctions');
 const { getUpcomingLoadSheddingSchedule } = require('./loadSheddingFunctions');
@@ -39,7 +39,7 @@ const getUserSuburb = async () => {
     try {
         return new Promise(resolve => {
             rl.question('Which suburb do you live in?: ', suburbName => {
-                resolve('Inverness');
+                resolve('osizweni');
             });
         })
     } catch (error) {
@@ -60,10 +60,12 @@ const main = async () => {
     const suburbList = extractSuburbs();
     const suburb = findSuburb(suburbList, suburbName, city).filter(suburb => suburb['BLOCK'] === myBlock);
 
-    const blockSchedule = blocks.find(block => block['blockNumber'] === suburb[suburb.length - 1]['BLOCK'])['schedule'];
-    const upcomingLoadShedding = getUpcomingLoadSheddingSchedule(blockSchedule);
+    const blockSchedule = blocks.find(block => block['blockNumber'] === suburb[suburb.length - 1]['BLOCK']);
+    // console.log(blockSchedule['schedule']);
+    const upcomingLoadShedding = getUpcomingLoadSheddingSchedule(blockSchedule['schedule']);
 
-    console.log(upcomingLoadShedding[0]['schedule'].filter(dailySchedule => dailySchedule.stage <= 2));
+    // console.log(upcomingLoadShedding[0]['schedule'].filter(dailySchedule => dailySchedule.stage <= 2));
+    console.log(upcomingLoadShedding);
 }
 
 main();

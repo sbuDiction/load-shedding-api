@@ -1,4 +1,4 @@
-const loadsheddingMap = require('./data/loadshedding-map.json');
+// const loadsheddingMap = require('./data/loadshedding-map.json');
 
 /**
  * This binary search is used to search for a city in a sorted list of cities.
@@ -38,31 +38,33 @@ const findCity = (cityList, cityName) => {
 const findSuburb = (suburbList, suburbName, cityName) => {
     const lowerCaseTarget = suburbName.toLowerCase();
 
-    return suburbList.filter(suburb => suburb['SP_NAME'].toLowerCase().replace(/\(\d+\)/g, '').trim().includes(lowerCaseTarget) && suburb['MP_NAME'].toLowerCase() === cityName.toLowerCase());
-    // return results; // Element not found in the array
+    return suburbList.filter(suburb => suburb['SP_NAME'].toLowerCase().replace(/\(\d+\)/g, '').trim().includes(lowerCaseTarget));
 
-    // const lowerCaseTarget = suburbName.toLowerCase();
-
-    // let low = 0;
-    // let high = suburbList.length - 1;
-
-    // while (low <= high) {
-    //     const mid = Math.floor((low + high) / 2);
-    //     const midValue = suburbList[mid]['suburb'].toLowerCase().replace(/\(\d+\)/g, '').trim();
-
-    //     if (midValue === lowerCaseTarget) {
-    //         return suburbList[mid];
-    //         // return mid; // String found, return its index
-    //     } else if (midValue.localeCompare(lowerCaseTarget) < 0) {
-    //         low = mid + 1; // Search in the right half
-    //     } else {
-    //         high = mid - 1; // Search in the left half
-    //     }
-    // }
-    // return []; // String not found in the array
+}
+/**
+ * 
+ * @param {[*]} suburbList 
+ * @param {string} id 
+ * @returns 
+ */
+const findAreaById = (suburbList, id) => {
+    const results = {};
+    suburbList.forEach(suburb => {
+        if (suburb['FULL_NAME'] === id) results['info'] = {
+            name: suburb['SP_NAME'],
+            region: suburb['MP_NAME'],
+            block: suburb['BLOCK'],
+            schedule: {
+                days: []
+            }
+        };
+        return results;
+    });
+    return results;
 }
 
 module.exports = {
     findCity,
-    findSuburb
+    findSuburb,
+    findAreaById
 }

@@ -1,5 +1,4 @@
 const jsonData = require('./json/loadshedding-data-example.json');
-const loadsheddingMap = require('./data/loadshedding-map.json');
 const blocks = require('./data/blocks.json');
 const { saveJSONFile } = require('./jsonFile');
 const { timeConversion, daysUntilMonthEnd } = require('./utils/helpers');
@@ -8,7 +7,7 @@ const { MONTHS, WEEKDAYS } = require('./constants/dateConstants');
 /**
  * List of all the provinces in South Africa
  */
-const Provinces = ['Eastern Cape', 'Free State', 'Gauteng (N/A)', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
+// const Provinces = ['Eastern Cape', 'Free State', 'Gauteng (N/A)', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
 
 
 /**
@@ -37,6 +36,7 @@ const getScheduleForDay = (day, loadSheddingScheduleData, loadSheddingStage) => 
  * @param {[]} loadSheddingScheduleData 
  */
 const getUpcomingLoadSheddingSchedule = (loadSheddingScheduleData) => {
+    const upcomingSchedule = []
     const date = new Date();
 
     let dayCounter = date.getDate(); // Keeps count of the days in a month
@@ -44,22 +44,19 @@ const getUpcomingLoadSheddingSchedule = (loadSheddingScheduleData) => {
     let dayOfMonth = date.getDate();
     let daysLeft = daysUntilMonthEnd(date);
 
-    const upcomingSchedule = []
-    const month = MONTHS[date.getMonth()];
-    const year = date.getFullYear();
-
     dayOfMonth += 1; // Adjusting for the zero based indexing
     daysLeft += 2; // Adjusting for the zero based indexing
 
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+
     for (let i = dayOfMonth; i > daysLeft; i++) {
         const schedule = getScheduleForDay(i - 1, loadSheddingScheduleData);
+
         upcomingSchedule.push({
-            day: dayCounter,
-            weekDay: WEEKDAYS[weekDayCounter],
-            month,
-            year,
-            date: `${dayCounter}:${month}:${year}`,
-            schedule
+            name: WEEKDAYS[weekDayCounter],
+            date: `${dayCounter}-${(month > 10 ? month : `0${month}`)}-${year}`,
+            stages: schedule
         })
         weekDayCounter === 6 ? weekDayCounter = 0 : weekDayCounter++;
         dayCounter++;
@@ -72,19 +69,19 @@ const getUpcomingLoadSheddingSchedule = (loadSheddingScheduleData) => {
     return upcomingSchedule;
 }
 
-/**
- * 
- * This function gets all the cities from a specific province.
- * @param {string} provinceName Province name.
- * @returns cities[{}]
- */
-const getCitiesByProvince = (provinceName) => {
-    try {
-        return { province: provinceName, cities: loadsheddingMap[provinceName]['cities'] };
-    } catch (error) {
-        return { error: `{${provinceName}}: Was Not Found` };
-    }
-}
+// /**
+//  * 
+//  * This function gets all the cities from a specific province.
+//  * @param {string} provinceName Province name.
+//  * @returns cities[{}]
+//  */
+// const getCitiesByProvince = (provinceName) => {
+//     try {
+//         return { province: provinceName, cities: loadsheddingMap[provinceName]['cities'] };
+//     } catch (error) {
+//         return { error: `{${provinceName}}: Was Not Found` };
+//     }
+// }
 
 /**
  * This function gets all the suburbs from a specific city.
@@ -116,26 +113,26 @@ const getSuburb = (suburbList, suburbName) => {
     }
 }
 
-/**
- * This function is for compiling all the excel spreadsheet data to a readable load shedding schedule and assign the schedule to each suburb according to the block number.
- */
-const createScheduleForEachPlace = () => {
-    Provinces.forEach(province => {
-        const cities = loadsheddingMap[province]['cities'];
-        if (cities.length != 0) {
-            cities.forEach(city => {
-                const suburbs = city['suburbs'];
-                suburbs.forEach(suburb => {
-                    const currentBlock = blocks.find(block => block['blockNumber'] === suburb['block']);
-                    suburb['schedule'] = currentBlock['schedule'];
-                });
-            });
-        } {
-            console.log('No cities available');
-        }
-    });
-    // saveJSONFile(loadsheddingMap, './data/loadshedding-map.json');
-}
+// /**
+//  * This function is for compiling all the excel spreadsheet data to a readable load shedding schedule and assign the schedule to each suburb according to the block number.
+//  */
+// const createScheduleForEachPlace = () => {
+//     Provinces.forEach(province => {
+//         const cities = loadsheddingMap[province]['cities'];
+//         if (cities.length != 0) {
+//             cities.forEach(city => {
+//                 const suburbs = city['suburbs'];
+//                 suburbs.forEach(suburb => {
+//                     const currentBlock = blocks.find(block => block['blockNumber'] === suburb['block']);
+//                     suburb['schedule'] = currentBlock['schedule'];
+//                 });
+//             });
+//         } {
+//             console.log('No cities available');
+//         }
+//     });
+//     // saveJSONFile(loadsheddingMap, './data/loadshedding-map.json');
+// }
 
 module.exports = {
     // getLoadSheddingSchedule

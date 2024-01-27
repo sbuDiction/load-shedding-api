@@ -6,7 +6,7 @@
     "configurations": [
     {
         "name": "Launch Program",
-        "program": "${workspaceFolder}/loadSheddingFunctions.js",
+        "program": "${workspaceFolder}/server.js",
         "request": "launch",
         "skipFiles": [
             "<node_internals>/**"

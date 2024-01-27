@@ -25,6 +25,7 @@ const extractCitiesFromSpreadSheet = () => {
 }
 
 const extractSuburbsFromSpreadSheet = () => {
+    const areasMap = new Map();
     const suburbSheetName = workbook.SheetNames[3];
     const suburbSheet = workbook.Sheets[suburbSheetName];
     const suburbJson = XLSX.utils.sheet_to_json(suburbSheet);

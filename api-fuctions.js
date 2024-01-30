@@ -30,16 +30,39 @@ const findCity = (cityList, cityName) => {
 
 
 /**
- * This binary search is used to search for a suburb in a sorted list of suburbs.
+ * This search function is used to search for a suburb in a sorted list of suburbs.
  * @param {[]} suburbList 
  * @param {string} suburbName 
- * @returns index number of the found suburb
+ * @param {string} cityName
+ * @returns Returns a list of all the found areas
  */
-const findSuburb = (suburbList, suburbName, cityName) => {
-    const lowerCaseTarget = suburbName.toLowerCase();
+const findAreaByName = (suburbList, suburbName, /*cityName*/) => {
+    const lowerCaseTarget = suburbName.split(' ');
+    // const city = cityName.split(' ');
+    const filteredAreas = suburbList.filter(suburb => suburb['SP_NAME'].toLowerCase().replace(/\(\d+\)/g, '').trim().includes(lowerCaseTarget[0].toLowerCase()));
+    const areasMap = new Map();
+    const searchResults = [];
 
-    return suburbList.filter(suburb => suburb['SP_NAME'].toLowerCase().replace(/\(\d+\)/g, '').trim().includes(lowerCaseTarget));
+    filteredAreas.forEach(suburb => {
+        areasMap.set(suburb['FULL_NAME'], suburb);
+    });
 
+
+    const mapToJson = JSON.stringify(Object.fromEntries(areasMap));
+    const results = JSON.parse(mapToJson);
+
+    for (const key in results) {
+        if (Object.hasOwnProperty.call(results, key)) {
+            const suburb = results[key];
+            searchResults.push({
+                id: suburb['FULL_NAME'],
+                name: suburb['SP_NAME'],
+                block: suburb['BLOCK'],
+                region: suburb['MP_NAME']
+            })
+        }
+    }
+    return searchResults;
 }
 /**
  * 
@@ -48,15 +71,13 @@ const findSuburb = (suburbList, suburbName, cityName) => {
  * @returns 
  */
 const findAreaById = (suburbList, id) => {
-    const results = {};
+    let results = {};
     suburbList.forEach(suburb => {
-        if (suburb['FULL_NAME'] === id) results['info'] = {
+        if (suburb['FULL_NAME'] === id) results = {
+            id: suburb['FULL_NAME'],
             name: suburb['SP_NAME'],
             region: suburb['MP_NAME'],
             block: suburb['BLOCK'],
-            schedule: {
-                days: []
-            }
         };
         return results;
     });
@@ -65,6 +86,6 @@ const findAreaById = (suburbList, id) => {
 
 module.exports = {
     findCity,
-    findSuburb,
+    findAreaByName,
     findAreaById
 }

@@ -1,16 +1,22 @@
 const express = require('express');
 const cors = require('cors');
-const { saveJSONFile } = require('./jsonFile');
-const { extractCities, extractSuburbs } = require('./spreadSheet');
-const { findSuburb, findAreaById } = require('./searchFunctions');
-const { getUpcomingLoadSheddingSchedule } = require('./loadSheddingFunctions');
+const NodeCache = require('node-cache');
+
+
+const { saveJSONFile } = require('./json-file-mananger');
+const { extractCities, extractSuburbs, extractLoadsheddingScheduleFromSheet } = require('./sheet-functions');
+const { findAreaByName, findAreaById } = require('./api-fuctions');
+const { getUpcomingLoadSheddingSchedule, getCurrentLoadShedding } = require('./load-shedding-functions');
+// const dotenv = require('env')
 
 const blocks = require('./data/blocks.json');
+const { reverseGeocoding } = require('./nominatim-api');
+const { generateIdFromCoordinates } = require('./utils/helpers');
 
 // App init
 const app = express();
-
-const PORT = 5000;
+const cache = new NodeCache();
+const PORT = process.env.PORT;
 
 // Middleware setup
 app.use(express.json());
@@ -35,48 +41,58 @@ app.post('/api/excel/data', (req, res) => {
 });
 
 /**
- * This endpoint 
+ * This endpoint is for searching an area by text
+ * @param {string} area
  */
-app.get('/api/search_areas/?', async (req, res) => {
+app.get('/api/search/areas/?', async (req, res) => {
     const { area } = req.query;
-    const areasMap = new Map();
-    const searchResults = [];
     const suburbsList = extractSuburbs();
-    const suburbs = findSuburb(suburbsList, area);
-
-    suburbs.forEach(suburb => {
-        areasMap.set(suburb['FULL_NAME'], suburb);
-    });
-
-    const mapToJson = JSON.stringify(Object.fromEntries(areasMap));
-    const results = JSON.parse(mapToJson);
-
-    for (const key in results) {
-        if (Object.hasOwnProperty.call(results, key)) {
-            const suburb = results[key];
-            searchResults.push({
-                id: suburb['FULL_NAME'],
-                name: suburb['SP_NAME'],
-                block: suburb['BLOCK'],
-                region: suburb['MP_NAME']
-            })
-        }
-    }
+    const searchResults = findAreaByName(suburbsList, area);
     res.json(searchResults);
 });
-
+/**
+ * This endpoint is for searching an area by id
+ * @param {string} id
+ */
 app.get('/api/area/?', async (req, res) => {
     const { id } = req.query;
 
     const suburbs = extractSuburbs();
     const area = findAreaById(suburbs, id);
-    const filteredBlock = blocks.filter(block => block['blockNumber'] === area['info']['block']);
-
-    const upcomingSchedule = getUpcomingLoadSheddingSchedule(filteredBlock[0]['schedule'])
-    area['info']['schedule']['days'] = upcomingSchedule;
-    res.json(area);
+    const schedule = extractLoadsheddingScheduleFromSheet();
+    const loadSheddingResults = getCurrentLoadShedding(schedule, area['block'], 2);
+    res.json(loadSheddingResults);
 });
+/**
+ * This endpoint is for searching nearby areas using coordinates `latitude` and `longitude`
+ * @param {number} lat `latitude`
+ * @param {number} lon `longitude`
+ */
+app.get('/api/search/nearby/area/?/?', async (req, res) => {
+    const { lat, lon } = req.query;
+    const addressId = generateIdFromCoordinates({ lat: lat, lon: lon });
+    const cachedMapRequests = cache.get(addressId);
+    const suburbs = extractSuburbs();
+    if (cachedMapRequests) {
+        const { suburb, state } = cachedMapRequests['address'];
+        const searchResults = findAreaByName(suburbs, suburb);
+        res.json(searchResults);
+    } else {
+        reverseGeocoding({ lat: lat, lon: lon }).then(address => {
+            const { data } = address;
+            const { suburb, state } = data['address'];
+            console.log(data);
+            const searchResults = findAreaByName(suburbs, suburb);
+            cache.set(addressId, data);
+            res.json(searchResults);
+        }).catch((error) => {
+            console.error(error)
+            res.status(500).json({ error: 'Internal Server Error' });
+        })
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`Server listening on Port:${PORT}`);
-})
+});

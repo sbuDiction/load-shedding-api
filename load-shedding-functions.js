@@ -1,6 +1,6 @@
 const jsonData = require('./json/loadshedding-data-example.json');
 const blocks = require('./data/blocks.json');
-const { saveJSONFile } = require('./jsonFile');
+const { saveJSONFile } = require('./json-file-mananger');
 const { timeConversion, daysUntilMonthEnd } = require('./utils/helpers');
 const { MONTHS, WEEKDAYS } = require('./constants/dateConstants');
 
@@ -133,8 +133,59 @@ const getSuburb = (suburbList, suburbName) => {
 //     });
 //     // saveJSONFile(loadsheddingMap, './data/loadshedding-map.json');
 // }
+/**
+ * 
+ * @param {[*]} schedule This is the data extracted from the sheet
+ * @param {number} block Block number for a suburb
+ * @param {number} loadSheddingStage Eskom current load shedding stage
+ */
+const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => {
+    // This function is made to work with stage 1 to 8
+    let daysMap = {};
+    const currentStage = loadSheddingStage;
+    const date = new Date();
+    let timeStamp = { start: schedule[0][0], end: schedule[0][1] };
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    let scheduleObj = {
+        stage: currentStage,
+        name: WEEKDAYS[date.getDay()],
+        date: `${date.getDate()}-${(month > 10 ? month : `0${month}`)}-${year}`,
+        schedule: []
+    }
+    schedule.forEach((row) => {
+        // Loop for maping the days of the month
+        let day = 1;
+        for (let i = 3; i < row.length; i++) {
+            daysMap[day] = { index: i };
+            day++;
+        }
+        const stage = row[2];
+        if (stage === 1) {
+            timeStamp['start'] = row[0];
+            timeStamp['end'] = row[1];
+        } else {
+            row[0] = timeStamp['start'];
+            row[1] = timeStamp['end'];
+        }
+    });
+    const currentDay = daysMap[date.getDate()];
+    schedule.forEach(row => {
+        const stage = row[2];
+        if (row[currentDay['index']] === block) {
+            if (stage <= currentStage) {
+                timeStamp['start'] = row[0];
+                timeStamp['end'] = row[1];
+                console.log(timeStamp);
+                const time = timeConversion(timeStamp);
+                scheduleObj.schedule.push(time);
+            }
+        }
+    });
+    return scheduleObj;
+}
 
 module.exports = {
-    // getLoadSheddingSchedule
-    getUpcomingLoadSheddingSchedule
+    getUpcomingLoadSheddingSchedule,
+    getCurrentLoadShedding
 }

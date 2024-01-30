@@ -6,7 +6,7 @@ const fs = require('fs');
 const LOAD_SHEDDING_MAP_FILE_PATH = './json/loadshedding_map.json';
 
 /** 
- * Home made function for saving json data to a json file since I'm not using a database...
+ * Home made function for saving json data to a json file
 */
 const saveJSONFile = (jsonData, filePath /** Specify the file path */) => {
     // Convert JSON object to string

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 
 /**
  * This function converts fractions of a day into time format (hours, minutes and seconds)
@@ -5,12 +6,14 @@
  * @returns TimeStamp{}
  */
 const timeConversion = time => {
-    // Reference time (in this case, midnight)
     const referenceTime = new Date(0); // Epoch time
+    // Given values with 1 hour subtracted 
+    let startTime = time['start'] - 1 / 24
+    let endTime = time['end'] - 1 / 24
 
     // Convert fractions of a day to milliseconds
-    const milliseconds1 = Math.round(time['start'] * 24 * 60 * 60 * 1000);
-    const milliseconds2 = Math.round(time['end'] * 24 * 60 * 60 * 1000);
+    const milliseconds1 = Math.round(startTime * 24 * 60 * 60 * 1000);
+    const milliseconds2 = Math.round(endTime * 24 * 60 * 60 * 1000);
 
     // Calculate new times
     const start = new Date(referenceTime.getTime() + milliseconds1);
@@ -39,8 +42,25 @@ const daysUntilMonthEnd = date => {
 
     return daysLeft;
 }
+/**
+ * 
+ * @param {{lat: }} coordinates 
+ * @returns 
+ */
+const generateIdFromCoordinates = (coordinates) => {
+    // Concatenate the values
+    const combinedValues = coordinates['lat'].toString() + coordinates['lon'].toString();
+
+    // Create a SHA-256 hash
+    const hash = crypto.createHash('sha256').update(combinedValues).digest('hex');
+
+    return hash;
+}
+
+
 
 module.exports = {
     timeConversion,
-    daysUntilMonthEnd
+    daysUntilMonthEnd,
+    generateIdFromCoordinates
 }

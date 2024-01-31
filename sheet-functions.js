@@ -46,6 +46,11 @@ const extractLoadsheddingScheduleFromSheet = () => {
     return loadsheddingJsonData;
 }
 
+
+class SheetHelpers {
+
+}
+
 module.exports = {
     extractCities: extractCitiesFromSheet,
     extractSuburbs: extractSuburbsFromSheet,

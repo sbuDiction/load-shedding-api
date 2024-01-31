@@ -151,7 +151,8 @@ const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => {
         stage: currentStage,
         name: WEEKDAYS[date.getDay()],
         date: `${date.getDate()}-${(month > 10 ? month : `0${month}`)}-${year}`,
-        schedule: []
+        schedule: [],
+        source: 'https://loadshedding.eskom.co.za/'
     }
     schedule.forEach((row) => {
         // Loop for maping the days of the month
@@ -176,7 +177,6 @@ const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => {
             if (stage <= currentStage) {
                 timeStamp['start'] = row[0];
                 timeStamp['end'] = row[1];
-                console.log(timeStamp);
                 const time = timeConversion(timeStamp);
                 scheduleObj.schedule.push(time);
             }

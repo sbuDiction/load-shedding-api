@@ -1,16 +1,12 @@
 {
   "dependencies": {
-    "@googlemaps/google-maps-services-js": "^3.3.42",
     "axios": "^1.6.7",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "generator-office": "^1.9.7",
     "node-cache": "^5.1.2",
     "nodemon": "^3.0.3",
     "puppeteer": "^21.6.1",
-    "read-excel-file": "^5.7.1",
-    "xlsx": "^0.18.5",
-    "yo": "^5.0.0"
+    "xlsx": "^0.18.5"
   },
   "name": "loadshedding-api",
   "version": "1.0.0",
@@ -20,7 +16,7 @@
     "start": "node --env-file=.env server.js",
     "dev": "nodemon --env-file=.env server.js"
   },
-  "author": "",
+  "author": "Sibusiso Nkosi",
   "license": "ISC",
   "description": ""
 }

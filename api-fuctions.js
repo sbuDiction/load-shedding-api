@@ -1,5 +1,4 @@
 // const loadsheddingMap = require('./data/loadshedding-map.json');
-
 /**
  * This binary search is used to search for a city in a sorted list of cities.
  * @param {[]} cityList Containing all the cities in a province.
@@ -83,6 +82,7 @@ const findAreaById = (suburbList, id) => {
     });
     return results;
 }
+
 
 module.exports = {
     findCity,

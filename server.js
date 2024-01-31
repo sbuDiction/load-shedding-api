@@ -12,6 +12,7 @@ const { getUpcomingLoadSheddingSchedule, getCurrentLoadShedding } = require('./l
 const blocks = require('./data/blocks.json');
 const { reverseGeocoding } = require('./nominatim-api');
 const { generateIdFromCoordinates } = require('./utils/helpers');
+const { getLoadSheddingStatus } = require('./web-scraper');
 
 // App init
 const app = express();
@@ -54,14 +55,16 @@ app.get('/api/search/areas/?', async (req, res) => {
  * This endpoint is for searching an area by id
  * @param {string} id
  */
-app.get('/api/area/?', async (req, res) => {
+app.get('/api/area/?', (req, res) => {
     const { id } = req.query;
-
-    const suburbs = extractSuburbs();
-    const area = findAreaById(suburbs, id);
-    const schedule = extractLoadsheddingScheduleFromSheet();
-    const loadSheddingResults = getCurrentLoadShedding(schedule, area['block'], 2);
-    res.json(loadSheddingResults);
+    (async () => {
+        const currentLoadSheddingStage = await getLoadSheddingStatus();
+        const suburbs = extractSuburbs();
+        const area = findAreaById(suburbs, id);
+        const schedule = extractLoadsheddingScheduleFromSheet();
+        const loadSheddingResults = getCurrentLoadShedding(schedule, area['block'], currentLoadSheddingStage);
+        res.json(loadSheddingResults);
+    })();
 });
 /**
  * This endpoint is for searching nearby areas using coordinates `latitude` and `longitude`
@@ -81,7 +84,6 @@ app.get('/api/search/nearby/area/?/?', async (req, res) => {
         reverseGeocoding({ lat: lat, lon: lon }).then(address => {
             const { data } = address;
             const { suburb, state } = data['address'];
-            console.log(data);
             const searchResults = findAreaByName(suburbs, suburb);
             cache.set(addressId, data);
             res.json(searchResults);
@@ -90,6 +92,18 @@ app.get('/api/search/nearby/area/?/?', async (req, res) => {
             res.status(500).json({ error: 'Internal Server Error' });
         })
     }
+});
+/**
+ * This endpoint is for showing current load shedding status
+ */
+app.get('/api/status', (req, res) => {
+    (async () => {
+        const currentLoadSheddingStage = await getLoadSheddingStatus();
+        res.json({
+            stage: currentLoadSheddingStage,
+            source: 'https://loadshedding.eskom.co.za/'
+        });
+    })();
 });
 
 

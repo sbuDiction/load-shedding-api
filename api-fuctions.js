@@ -49,6 +49,7 @@ const findAreaByName = (suburbList, suburbName, /*cityName*/) => {
 
     const mapToJson = JSON.stringify(Object.fromEntries(areasMap));
     const results = JSON.parse(mapToJson);
+    let regionMap = {};
 
     for (const key in results) {
         if (Object.hasOwnProperty.call(results, key)) {
@@ -58,16 +59,17 @@ const findAreaByName = (suburbList, suburbName, /*cityName*/) => {
                 name: suburb['SP_NAME'],
                 block: suburb['BLOCK'],
                 region: suburb['MP_NAME']
-            })
+            });
+            regionMap[suburb['MP_NAME']] = [];
         }
     }
-    return searchResults;
+    return { searchResults, regionMap };
 }
 /**
  * 
  * @param {[*]} suburbList 
  * @param {string} id 
- * @returns 
+ * @returns {} Returns an object from the list if a match is found or empty object
  */
 const findAreaById = (suburbList, id) => {
     let results = {};

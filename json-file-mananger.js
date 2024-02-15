@@ -22,6 +22,7 @@ const saveJSONFile = (jsonData, filePath /** Specify the file path */) => {
             console.log(`JSON file saved successfully at ${filePath}`);
         }
     });
+    fs.close();
     return isSaved;
 }
 
@@ -44,6 +45,7 @@ const fromFileToJSON = filePath => {
             return { isFound, error: `Error parsing JSON: ${parseError}` }
         }
     });
+    fs.close();
 }
 
 module.exports = {

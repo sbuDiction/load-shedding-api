@@ -55,7 +55,7 @@ const getUpcomingLoadSheddingSchedule = (loadSheddingScheduleData) => {
 
         upcomingSchedule.push({
             name: WEEKDAYS[weekDayCounter],
-            date: `${dayCounter}-${(month > 10 ? month : `0${month}`)}-${year}`,
+            date: `${year}-${(month > 10 ? month : `0${month}-${dayCounter}`)}`,
             stages: schedule
         })
         weekDayCounter === 6 ? weekDayCounter = 0 : weekDayCounter++;
@@ -139,18 +139,21 @@ const getSuburb = (suburbList, suburbName) => {
  * @param {number} block Block number for a suburb
  * @param {number} loadSheddingStage Eskom current load shedding stage
  */
-const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => {
+const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => new Promise(resolve => {
     // This function is made to work with stage 1 to 8
-    let daysMap = {};
-    const currentStage = loadSheddingStage;
     const date = new Date();
-    let timeStamp = { start: schedule[0][0], end: schedule[0][1] };
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
+
+    let daysMap = {};
+    let timeStamp = {
+        start: schedule[0][0],
+        end: schedule[0][1]
+    };
     let scheduleObj = {
-        stage: currentStage,
+        stage: loadSheddingStage,
         name: WEEKDAYS[date.getDay()],
-        date: `${date.getDate()}-${(month > 10 ? month : `0${month}`)}-${year}`,
+        date: `${year}-${(month > 10 ? month : `0${month}`)}-${date.getDate()}`,
         schedule: [],
         source: 'https://loadshedding.eskom.co.za/'
     }
@@ -161,6 +164,7 @@ const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => {
             daysMap[day] = { index: i };
             day++;
         }
+
         const stage = row[2];
         if (stage === 1) {
             timeStamp['start'] = row[0];
@@ -170,20 +174,23 @@ const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => {
             row[1] = timeStamp['end'];
         }
     });
+
     const currentDay = daysMap[date.getDate()];
     schedule.forEach(row => {
         const stage = row[2];
         if (row[currentDay['index']] === block) {
-            if (stage <= currentStage) {
+            if (stage <= loadSheddingStage) {
                 timeStamp['start'] = row[0];
                 timeStamp['end'] = row[1];
                 const time = timeConversion(timeStamp);
+                time['stage'] = stage;
                 scheduleObj.schedule.push(time);
             }
         }
     });
-    return scheduleObj;
-}
+    // return scheduleObj;
+    resolve(scheduleObj);
+})
 
 module.exports = {
     getUpcomingLoadSheddingSchedule,

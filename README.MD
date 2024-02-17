@@ -17,3 +17,6 @@
 | 400 | Bad Request |
 | 404 | Not Found |
 | 500 | Internal Server Error |
+
+##
+Full Documentaion Hosted on [Postman](https://documenter.getpostman.com/view/11585940/2sA2r7zi4R) 

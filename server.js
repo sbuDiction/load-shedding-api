@@ -111,9 +111,9 @@ app.get('/suburb/?', (req, res) => {
  */
 app.get('/status', (req, res) => {
     (async () => {
-        const currentLoadSheddingStage = await getLoadSheddingStatus();
+        const currentLoadSheddingStatus = await getLoadSheddingStatus();
         res.status(200).json({
-            stage: currentLoadSheddingStage,
+            stage: currentLoadSheddingStatus,
             source: 'https://loadshedding.eskom.co.za/'
         });
     })();

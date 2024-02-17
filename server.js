@@ -5,7 +5,7 @@ const XLSX = require('xlsx');
 const webPush = require('web-push');
 
 
-const { findAreaByName, findAreaById } = require('./api-fuctions');
+const { findAreaByName, findAreaById } = require('./search-functions');
 const { getCurrentLoadShedding } = require('./load-shedding-functions');
 const { reverseGeocoding } = require('./nominatim-api');
 const { generateIdFromCoordinates } = require('./utils/helpers');
@@ -19,9 +19,10 @@ const app = express();
 const PORT = process.env.PORT;
 const PROVINCE = process.env.PROVINCE;
 const cache = new NodeCache();
+const loadSheddingScheduleCache = new NodeCache();
 const subscribers = [];
 
-const excelFileManager = new ExcelFileManager(XLSX);
+// const excelFileManager = new ExcelFileManager(XLSX);
 const sheetManager = new SheetManager();
 
 // Middleware setup
@@ -44,55 +45,26 @@ app.get('/', async (req, res) => {
  * This endpoint is for searching an area by text
  * @param {string} area
  */
-app.get('/api/search/areas/?', async (req, res) => {
-    const { area } = req.query;
-    const data = [];
-    if (area) await sheetManager.extractSuburbsFromSheet(area)
+app.get('/search/?', async (req, res) => {
+    const { suburb } = req.query;
+    if (suburb) await sheetManager.extractSuburbsFromSheet(suburb)
         .then(results => {
-            const { suburbs, regions } = results;
-            suburbs.forEach(area => {
-                const region = area['region'];
-                regions[region].push(area);
-            });
-            for (const key in regions) {
-                if (Object.hasOwnProperty.call(regions, key)) {
-                    const suburbs = regions[key];
-                    data.push({
-                        name: key,
-                        suburbs
-                    });
-                }
-            }
-            res.json(data);
+            const { suburbs } = results;
+            res.status(suburbs.length != 0 ? 200 : 404)
+                .json({
+                    suburbs
+                });
         });
     else {
-        res.json({
-            error_msg: 'You must include the area name in your request'
-        });
+        res.status(400);
     }
-});
-/**
- * This endpoint is for searching an area by id
- * @param {string} id
- */
-app.get('/api/area/?', (req, res) => {
-    const { id } = req.query;
-    (async () => {
-        const currentLoadSheddingStage = await getLoadSheddingStatus();
-        await sheetManager.extractLoadsheddingScheduleFromSheet(id).then(async data => {
-            const { schedule, area } = data;
-            const loadSheddingResults = await getCurrentLoadShedding(schedule, area['block'], currentLoadSheddingStage);
-            console.log(loadSheddingResults);
-            res.json(loadSheddingResults);
-        })
-    })();
 });
 /**
  * This endpoint is for searching nearby areas using coordinates `latitude` and `longitude`
  * @param {number} lat `latitude`
  * @param {number} lon `longitude`
  */
-app.get('/api/search/nearby/area/?/?', async (req, res) => {
+app.get('/nearby/?/?', async (req, res) => {
     const { lat, lon } = req.query;
     const addressId = generateIdFromCoordinates({ lat: lat, lon: lon });
     const cachedMapRequests = cache.get(addressId);
@@ -100,7 +72,8 @@ app.get('/api/search/nearby/area/?/?', async (req, res) => {
     if (cachedMapRequests) {
         const { suburb, state } = cachedMapRequests['address'];
         const searchResults = findAreaByName(suburbs, suburb);
-        res.json(searchResults);
+        res.status(200)
+            .json(searchResults);
     } else {
         reverseGeocoding({ lat: Number(lat), lon: Number(lon) }).then(address => {
             const { data } = address;
@@ -109,18 +82,37 @@ app.get('/api/search/nearby/area/?/?', async (req, res) => {
             cache.set(addressId, data);
             res.json(searchResults);
         }).catch((error) => {
-            console.error(error)
-            res.status(500).json({ error: 'Internal Server Error' });
+            res.status(500);
         })
     }
 });
 /**
+ * This endpoint is for searching an area by id
+ * @param {string} id
+ */
+app.get('/suburb/?', (req, res) => {
+    const { id } = req.query;
+    (async () => {
+        const cachedSchedule = loadSheddingScheduleCache.get(id);
+        if (cachedSchedule) res.json(cachedSchedule);
+        else {
+            const currentLoadSheddingStage = await getLoadSheddingStatus();
+            await sheetManager.extractLoadsheddingScheduleFromSheet(id).then(async data => {
+                const { schedule, area } = data;
+                const loadSheddingResults = await getCurrentLoadShedding(schedule, area, currentLoadSheddingStage);
+                loadSheddingScheduleCache.set(id, loadSheddingResults);
+                res.status(200).json(loadSheddingResults);
+            })
+        }
+    })();
+});
+/**
  * This endpoint is for showing current load shedding status
  */
-app.get('/api/status', (req, res) => {
+app.get('/status', (req, res) => {
     (async () => {
         const currentLoadSheddingStage = await getLoadSheddingStatus();
-        res.json({
+        res.status(200).json({
             stage: currentLoadSheddingStage,
             source: 'https://loadshedding.eskom.co.za/'
         });
@@ -138,11 +130,9 @@ app.post('/subscribe', async (req, res) => {
         //     schedule: value
         // }
     })
-    webPush.sendNotification(subscription, payload);
-    res.json({
-        reason: 'Subscribed',
-        status: 201
-    });
+    webPush.sendNotification(subscription, payload).then(() => {
+        res.status(201);
+    })
 });
 
 app.post('/send_notification', async (req, res) => {

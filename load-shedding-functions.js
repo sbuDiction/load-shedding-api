@@ -139,24 +139,14 @@ const getSuburb = (suburbList, suburbName) => {
  * @param {number} block Block number for a suburb
  * @param {number} loadSheddingStage Eskom current load shedding stage
  */
-const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => new Promise(resolve => {
+const getCurrentLoadShedding = (schedule, area, loadSheddingStage) => new Promise(resolve => {
     // This function is made to work with stage 1 to 8
-    const date = new Date();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
-
     let daysMap = {};
     let timeStamp = {
         start: schedule[0][0],
         end: schedule[0][1]
     };
-    let scheduleObj = {
-        stage: loadSheddingStage,
-        name: WEEKDAYS[date.getDay()],
-        date: `${year}-${(month > 10 ? month : `0${month}`)}-${date.getDate()}`,
-        schedule: [],
-        source: 'https://loadshedding.eskom.co.za/'
-    }
+
     schedule.forEach((row) => {
         // Loop for maping the days of the month
         let day = 1;
@@ -175,21 +165,46 @@ const getCurrentLoadShedding = (schedule, block, loadSheddingStage) => new Promi
         }
     });
 
-    const currentDay = daysMap[date.getDate()];
-    schedule.forEach(row => {
-        const stage = row[2];
-        if (row[currentDay['index']] === block) {
-            if (stage <= loadSheddingStage) {
-                timeStamp['start'] = row[0];
-                timeStamp['end'] = row[1];
-                const time = timeConversion(timeStamp);
-                time['stage'] = stage;
-                scheduleObj.schedule.push(time);
-            }
+    let scheduleMap = {
+        suburb: {
+            name: area['name'],
+            region: area['region']
+        },
+        schedule: {
+            days: [],
+            source: 'https://loadshedding.eskom.co.za/'
         }
-    });
-    // return scheduleObj;
-    resolve(scheduleObj);
+    };
+    const date = new Date();
+    const week = 8; // Adjusting for zero based index
+    let day = date.getDate();
+    let dayIndex = 0;
+    for (let i = 1; i < week; i++) {
+        date.setDate(day);
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        const currentDay = daysMap[date.getDate()];
+        scheduleMap['schedule']['days'].push({
+            date: `${year}-${(month > 10 ? month : `0${month}`)}-${date.getDate()}`,
+            name: WEEKDAYS[date.getDay()],
+            stages: [],
+        });
+        schedule.forEach(row => {
+            const stage = row[2];
+            if (row[currentDay['index']] === area['block']) {
+                if (stage <= loadSheddingStage) {
+                    timeStamp['start'] = row[0];
+                    timeStamp['end'] = row[1];
+                    const time = timeConversion(timeStamp);
+                    time['stage'] = stage;
+                    scheduleMap['schedule']['days'][dayIndex]['stages'].push(time);
+                }
+            }
+        });
+        dayIndex++;
+        day++;
+    }
+    resolve(scheduleMap);
 })
 
 module.exports = {

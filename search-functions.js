@@ -35,7 +35,7 @@ const findCity = (cityList, cityName) => {
  * @param {string} cityName
  * @returns Returns a list of all the found areas
  */
-const findAreaByName = (suburbList, suburbName, /*cityName*/) => {
+const findAreaByName = (suburbList, suburbName, provinceName) => {
     const lowerCaseTarget = suburbName.split(' ');
     // const city = cityName.split(' ');
     const filteredAreas = suburbList.filter(suburb => suburb['SP_NAME'].toLowerCase().replace(/\(\d+\)/g, '').trim().includes(lowerCaseTarget[0].toLowerCase()));
@@ -49,8 +49,6 @@ const findAreaByName = (suburbList, suburbName, /*cityName*/) => {
 
     const mapToJson = JSON.stringify(Object.fromEntries(areasMap));
     const results = JSON.parse(mapToJson);
-    let regionMap = {};
-
     for (const key in results) {
         if (Object.hasOwnProperty.call(results, key)) {
             const suburb = results[key];
@@ -58,12 +56,11 @@ const findAreaByName = (suburbList, suburbName, /*cityName*/) => {
                 id: suburb['FULL_NAME'],
                 name: suburb['SP_NAME'],
                 block: suburb['BLOCK'],
-                region: suburb['MP_NAME']
+                region: `${suburb['MP_NAME']}, ${provinceName}`
             });
-            regionMap[suburb['MP_NAME']] = [];
         }
     }
-    return { searchResults, regionMap };
+    return { searchResults };
 }
 /**
  * 
@@ -71,13 +68,13 @@ const findAreaByName = (suburbList, suburbName, /*cityName*/) => {
  * @param {string} id 
  * @returns {} Returns an object from the list if a match is found or empty object
  */
-const findAreaById = (suburbList, id) => {
+const findAreaById = (suburbList, id, provinceName) => {
     let results = {};
     suburbList.forEach(suburb => {
         if (suburb['FULL_NAME'] === id) results = {
             id: suburb['FULL_NAME'],
             name: suburb['SP_NAME'],
-            region: suburb['MP_NAME'],
+            region: `${suburb['MP_NAME']}, ${provinceName}`,
             block: suburb['BLOCK'],
         };
         return results;

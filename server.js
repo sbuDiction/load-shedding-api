@@ -42,6 +42,10 @@ const init = async () => {
         await redisClient.connect();
         console.log('Connected to Redis');
     }
+    await getLoadSheddingStatus().then(async status => {
+        await redisClient.set('status', status);
+        console.log(status);
+    });
 }
 init();
 // const PROVINCE = process.env.PROVINCE;
@@ -121,8 +125,8 @@ app.get('/suburb/?', (req, res) => {
             const { schedule, area } = data;
             const currentLoadShedding = await getCurrentLoadShedding(schedule, area, currentLoadSheddingStage);
             res.status(200).json(currentLoadShedding);
-            // await redisClient.hSet(`schedule:${id}`, currentLoadShedding);
-        });
+            await redisClient.hSet(`schedule:${id}`, currentLoadShedding);
+        })
         // }
     })();
 });

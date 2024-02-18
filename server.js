@@ -3,6 +3,7 @@ const cors = require('cors');
 const NodeCache = require('node-cache');
 const XLSX = require('xlsx');
 const webPush = require('web-push');
+const { createClient } = require('redis');
 
 
 const { findAreaByName, findAreaById } = require('./search-functions');
@@ -10,20 +11,17 @@ const { getCurrentLoadShedding } = require('./load-shedding-functions');
 const { reverseGeocoding } = require('./nominatim-api');
 const { generateIdFromCoordinates } = require('./utils/helpers');
 const { getLoadSheddingStatus } = require('./web-scraper');
+const { pushServiceEevent } = require('./PushService');
 const ExcelFileManager = require('./ExcelFileManager');
 const SheetManager = require('./SheetManager');
-const { pushServiceEevent } = require('./PushService');
+const RedisMiddleware = require('./middleware/redisMiddleware');
 
 // App init
 const app = express();
 const PORT = process.env.PORT;
-const PROVINCE = process.env.PROVINCE;
-const cache = new NodeCache();
-const loadSheddingScheduleCache = new NodeCache();
-const subscribers = [];
 
-// const excelFileManager = new ExcelFileManager(XLSX);
-const sheetManager = new SheetManager();
+
+
 
 // Middleware setup
 app.use(express.json());
@@ -34,6 +32,25 @@ webPush.setVapidDetails(
     process.env.VAPID_PRIVATE_KEY
 );
 
+const redisClient = createClient({
+    url: process.env.REDIS_URL
+});
+
+const init = async () => {
+    redisClient.on('error', err => console.log('Redis Client Error', err));
+    if (!redisClient.isOpen) {
+        await redisClient.connect();
+        console.log('Connected to Redis');
+    }
+}
+init();
+// const PROVINCE = process.env.PROVINCE;
+const cache = new NodeCache();
+// const loadSheddingScheduleCache = new NodeCache();
+// const subscribers = [];
+// const excelFileManager = new ExcelFileManager(XLSX);
+const sheetManager = new SheetManager();
+const redisMiddleware = new RedisMiddleware(redisClient);
 
 
 app.get('/', async (req, res) => {
@@ -45,19 +62,22 @@ app.get('/', async (req, res) => {
  * This endpoint is for searching an area by text
  * @param {string} area
  */
-app.get('/search/?', async (req, res) => {
+app.get('/search/?', redisMiddleware.checkSearchCache, async (req, res) => {
     const { suburb } = req.query;
-    if (suburb) await sheetManager.extractSuburbsFromSheet(suburb)
-        .then(results => {
+    await sheetManager.extractSuburbsFromSheet(suburb)
+        .then(async results => {
             const { suburbs } = results;
-            res.status(suburbs.length != 0 ? 200 : 404)
-                .json({
-                    suburbs
+            if (suburbs.length === 0) res.status(400);
+            else {
+                res.status(suburbs.length != 0 ? 200 : 404)
+                    .json({
+                        suburbs
+                    });
+                await redisClient.hSet(`search-results:${suburb}`, {
+                    suburbs: JSON.stringify(results['suburbs']).toString()
                 });
+            }
         });
-    else {
-        res.status(400);
-    }
 });
 /**
  * This endpoint is for searching nearby areas using coordinates `latitude` and `longitude`
@@ -93,17 +113,17 @@ app.get('/nearby/?/?', async (req, res) => {
 app.get('/suburb/?', (req, res) => {
     const { id } = req.query;
     (async () => {
-        const cachedSchedule = loadSheddingScheduleCache.get(id);
-        if (cachedSchedule) res.json(cachedSchedule);
-        else {
-            const currentLoadSheddingStage = await getLoadSheddingStatus();
-            await sheetManager.extractLoadsheddingScheduleFromSheet(id).then(async data => {
-                const { schedule, area } = data;
-                const loadSheddingResults = await getCurrentLoadShedding(schedule, area, currentLoadSheddingStage);
-                loadSheddingScheduleCache.set(id, loadSheddingResults);
-                res.status(200).json(loadSheddingResults);
-            })
-        }
+        // const loadSheddingSchedule = await redisClient.hGetAll(`schedule:${id}`);
+        // if (loadSheddingSchedule) res.json(JSON.stringify(loadSheddingSchedule, null, 2));
+        // else {
+        const currentLoadSheddingStage = await redisClient.get('status');
+        await sheetManager.extractLoadsheddingScheduleFromSheet(id).then(async data => {
+            const { schedule, area } = data;
+            const currentLoadShedding = await getCurrentLoadShedding(schedule, area, currentLoadSheddingStage);
+            res.status(200).json(currentLoadShedding);
+            // await redisClient.hSet(`schedule:${id}`, currentLoadShedding);
+        });
+        // }
     })();
 });
 /**
@@ -111,7 +131,7 @@ app.get('/suburb/?', (req, res) => {
  */
 app.get('/status', (req, res) => {
     (async () => {
-        const currentLoadSheddingStatus = await getLoadSheddingStatus();
+        const currentLoadSheddingStatus = await redisClient.get('status');
         res.status(200).json({
             stage: currentLoadSheddingStatus,
             source: 'https://loadshedding.eskom.co.za/'

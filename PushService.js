@@ -80,9 +80,8 @@ const main = () => {
         (async () => {
             console.log('Fetching load shedding status');
             await getLoadSheddingStatus().then(status => {
-                const loadsheddingStatus = status != NaN ? status : 0;
-                if (loadsheddingStatus !== currentLoadSheddingStatus) {
-                    currentLoadSheddingStatus = loadsheddingStatus;
+                if (status !== currentLoadSheddingStatus) {
+                    currentLoadSheddingStatus = status;
                     pushServiceEevent.emit('load shedding stage changed');
                 }
             });

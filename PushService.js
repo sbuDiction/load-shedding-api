@@ -12,7 +12,7 @@ webPush.setVapidDetails(
 
 class PushServiceEvent extends EventEmitter { }
 
-let currentLoadSheddingStage = 0;
+let currentLoadSheddingStatus = 0;
 const subscriptions = [];
 const pushServiceEevent = new PushServiceEvent();
 const subcriptionService = new SubscriptionService(subscriptions);
@@ -38,7 +38,7 @@ const main = () => {
 
     pushServiceEevent.on('sync', () => {
         const jobs = [];
-        notificationManager.upcomingNotifications().then(notifications => {
+        notificationManager.upcomingNotifications(currentLoadSheddingStatus).then(notifications => {
             if (jobs.length != 0) {
                 console.log(`Stopping all jobs before setting up new ones`);
                 jobs.forEach(job => {
@@ -78,24 +78,20 @@ const main = () => {
     const cronExpression = '0 16 * * *';
     cron.schedule(cronExpression, () => {
         (async () => {
+            console.log('Fetching load shedding status');
             await getLoadSheddingStatus().then(status => {
-                if (status !== currentLoadSheddingStage) {
-                    currentLoadSheddingStage = status;
-                    pushServiceEevent.emit('load shedding stage changed', status);
+                const loadsheddingStatus = status != NaN ? status : 0;
+                if (loadsheddingStatus !== currentLoadSheddingStatus) {
+                    currentLoadSheddingStatus = loadsheddingStatus;
+                    pushServiceEevent.emit('load shedding stage changed');
                 }
             });
         });
     });
-
-    // const test = ['50 15 * * *', '51 15 * * *', '52 15 * * *']
-    // test.forEach(t => {
-    //     cron.schedule(t, () => {
-    //         console.log('Running job:', t);
-    //     })
-    // })
 }
 main();
 
 module.exports = {
-    pushServiceEevent
+    pushServiceEevent,
+    currentLoadSheddingStatus
 };

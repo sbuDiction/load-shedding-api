@@ -1,27 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const NodeCache = require('node-cache');
-const XLSX = require('xlsx');
 const webPush = require('web-push');
 const { createClient } = require('redis');
-
 
 const { findAreaByName, findAreaById } = require('./search-functions');
 const { getCurrentLoadShedding } = require('./load-shedding-functions');
 const { reverseGeocoding } = require('./nominatim-api');
 const { generateIdFromCoordinates } = require('./utils/helpers');
 const { getLoadSheddingStatus } = require('./web-scraper');
-const { pushServiceEevent } = require('./PushService');
-const ExcelFileManager = require('./ExcelFileManager');
+let { pushServiceEevent, currentLoadSheddingStatus } = require('./PushService');
 const SheetManager = require('./SheetManager');
 const RedisMiddleware = require('./middleware/redisMiddleware');
 
-// App init
 const app = express();
 const PORT = process.env.PORT;
-
-
-
 
 // Middleware setup
 app.use(express.json());
@@ -33,7 +26,7 @@ webPush.setVapidDetails(
 );
 
 const redisClient = createClient({
-    url: process.env.REDIS_URL
+    url: 'rediss://red-cn8ka70l5elc738tt8bg:piSdulYRXDJ9K5BKmlLtzcieRatEyJCf@oregon-redis.render.com:6379',
 });
 
 const init = async () => {
@@ -44,21 +37,20 @@ const init = async () => {
     }
     await getLoadSheddingStatus().then(async status => {
         await redisClient.set('status', status);
-        console.log(status);
+        console.log('Load Shedding status:', status);
+        currentLoadSheddingStatus = status;
     });
 }
+
 init();
-// const PROVINCE = process.env.PROVINCE;
+
 const cache = new NodeCache();
-// const loadSheddingScheduleCache = new NodeCache();
-// const subscribers = [];
-// const excelFileManager = new ExcelFileManager(XLSX);
 const sheetManager = new SheetManager();
 const redisMiddleware = new RedisMiddleware(redisClient);
 
 
 app.get('/', async (req, res) => {
-    res.json({
+    res.status(200).json({
         status: 'API running...'
     })
 });
@@ -120,10 +112,10 @@ app.get('/suburb/?', (req, res) => {
         // const loadSheddingSchedule = await redisClient.hGetAll(`schedule:${id}`);
         // if (loadSheddingSchedule) res.json(JSON.stringify(loadSheddingSchedule, null, 2));
         // else {
-        const currentLoadSheddingStage = await redisClient.get('status');
+        const currentLoadSheddingStatus = await redisClient.get('status');
         await sheetManager.extractLoadsheddingScheduleFromSheet(id).then(async data => {
             const { schedule, area } = data;
-            const currentLoadShedding = await getCurrentLoadShedding(schedule, area, currentLoadSheddingStage);
+            const currentLoadShedding = await getCurrentLoadShedding(schedule, area, currentLoadSheddingStatus);
             res.status(200).json(currentLoadShedding);
             await redisClient.hSet(`schedule:${id}`, currentLoadShedding);
         })
@@ -168,7 +160,6 @@ app.post('/send_notification', async (req, res) => {
 app.get('/vapidPublicKey', async (req, res) => {
     res.send(process.env.VAPID_PUBLIC_KEY);
 })
-
 
 app.listen(PORT, () => {
     console.log(`Server listening on Port:${PORT}`);

@@ -6,7 +6,11 @@ const puppeteer = require('puppeteer');
 const getLoadSheddingStatus = async () => new Promise(async resolve => {
     try {
         // Launch the browser and open a new blank page
-        const browser = await puppeteer.launch();
+        console.log('launching chrome...');
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/google-chrome',
+            args: ['--no-sandbox']
+        });
         const page = await browser.newPage();
 
         await page.goto('https://loadshedding.eskom.co.za/');
@@ -21,7 +25,7 @@ const getLoadSheddingStatus = async () => new Promise(async resolve => {
 
         await browser.close();
         const status = Number(splitText[splitText.length - 1]);
-        // const status = 5;
+        if (Number.isNaN(status)) resolve(0);
         resolve(status);
 
     } catch (error) {

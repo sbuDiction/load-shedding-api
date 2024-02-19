@@ -42,25 +42,24 @@ class NotificationManager {
     /**
      * 
      */
-    upcomingNotifications = () => new Promise(resolve => {
+    upcomingNotifications = (currentLoadSheddingStatus) => new Promise(resolve => {
         const lastSubscription = this.subscriptions.length - 1;
         const subscription = this.subscriptions[lastSubscription];
         new SheetManager()
             .extractLoadsheddingScheduleFromSheet(subscription['areaId'])
             .then(async data => {
                 const { schedule, area } = data;
-                await getLoadSheddingStatus().then(stage => {
-                    getCurrentLoadShedding(schedule, area['block'], stage)
-                        .then(loadsheddingSchedule => {
-                            console.log(loadsheddingSchedule);
-                            loadsheddingSchedule['schedule'].forEach(timeStamp => {
-                                let mapKey = timeStamp['start'];
-                                const addNotification = [...this.schedules.get(mapKey), { timeStamp, subscription }]
-                                this.schedules.set(mapKey, addNotification);
-                            });
-                            resolve(this.schedules);
+                // await getLoadSheddingStatus().then(stage => {
+                getCurrentLoadShedding(schedule, area['block'], currentLoadSheddingStatus)
+                    .then(loadsheddingSchedule => {
+                        loadsheddingSchedule['schedule'].forEach(timeStamp => {
+                            let mapKey = timeStamp['start'];
+                            const addNotification = [...this.schedules.get(mapKey), { timeStamp, subscription }]
+                            this.schedules.set(mapKey, addNotification);
                         });
-                });
+                        resolve(this.schedules);
+                    });
+                // });
             });
     });
 

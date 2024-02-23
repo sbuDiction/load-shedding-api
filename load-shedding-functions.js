@@ -1,6 +1,4 @@
-const jsonData = require('./json/loadshedding-data-example.json');
-const blocks = require('./data/blocks.json');
-const { saveJSONFile } = require('./json-file-mananger');
+// const { saveJSONFile } = require('./json-file-mananger');
 const { timeConversion, daysUntilMonthEnd } = require('./utils/helpers');
 const { MONTHS, WEEKDAYS } = require('./constants/dateConstants');
 
@@ -139,7 +137,7 @@ const getSuburb = (suburbList, suburbName) => {
  * @param {number} block Block number for a suburb
  * @param {number} loadSheddingStage Eskom current load shedding stage
  */
-const getCurrentLoadShedding = (schedule, area, loadSheddingStage) => new Promise(resolve => {
+const getCurrentLoadShedding = (schedule, suburb, loadSheddingStage, adjustTime) => new Promise(resolve => {
     // This function is made to work with stage 1 to 8
     let daysMap = {};
     let timeStamp = {
@@ -167,14 +165,15 @@ const getCurrentLoadShedding = (schedule, area, loadSheddingStage) => new Promis
 
     let scheduleMap = {
         suburb: {
-            name: area['name'],
-            region: area['region']
+            name: suburb['name'],
+            region: suburb['region']
         },
         schedule: {
             days: [],
-            source: 'https://loadshedding.eskom.co.za/'
-        }
+        },
+        source: 'https://loadshedding.eskom.co.za/'
     };
+
     const date = new Date();
     const week = 8; // Adjusting for zero based index
     let day = date.getDate();
@@ -189,13 +188,16 @@ const getCurrentLoadShedding = (schedule, area, loadSheddingStage) => new Promis
             name: WEEKDAYS[date.getDay()],
             stages: [],
         });
+
         schedule.forEach(row => {
             const stage = row[2];
-            if (row[currentDay['index']] === area['block']) {
+            if (row[currentDay['index']] === suburb['block']) {
                 if (stage <= loadSheddingStage) {
+                    // console.log('Before:', timeStamp);
                     timeStamp['start'] = row[0];
                     timeStamp['end'] = row[1];
-                    const time = timeConversion(timeStamp);
+                    // console.log('After:', timeStamp);
+                    const time = timeConversion(timeStamp, adjustTime);
                     time['stage'] = stage;
                     scheduleMap['schedule']['days'][dayIndex]['stages'].push(time);
                 }

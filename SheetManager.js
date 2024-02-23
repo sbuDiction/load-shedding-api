@@ -2,12 +2,11 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2024-01-31 21:22:37 
  * @Last Modified by: sibusiso.nkosi
- * @Last Modified time: 2024-02-16 22:44:26
+ * @Last Modified time: 2024-02-23 09:14:58
  */
 
 const fs = require('fs');
 const XLSX = require('xlsx');
-const { findAreaByName, findAreaById } = require('./search-functions');
 
 /**
  * @alias  XLSX:number
@@ -22,6 +21,9 @@ class SheetManager {
             if (err) console.error(err);
             else {
                 const suburbs = [];
+                const uniqueList = [];
+                let mapSuburbs = {}
+
                 // let search = {};
                 let regions = {};
                 files.forEach(async fileName => {
@@ -38,14 +40,31 @@ class SheetManager {
                     const jsonList = XLSX.utils.sheet_to_json(suburbSheet);
 
                     const provinceName = province[0][0];
+                    jsonList.forEach(suburb => {
+                        suburbs.push({
+                            sid: `${suburb['SP_NAME'].replace(` (${suburb['BLOCK']})`, '-')}${suburb['BLOCK']}-${suburb['MP_NAME']}-${provinceName.replace(' ', '-')}`.toLowerCase().replace(' ', '-'),
+                            name: suburb['SP_NAME'],
+                            region: `${suburb['MP_NAME']}, ${provinceName}`,
+                            block: suburb['BLOCK']
+                        });
+                    })
 
-                    const { searchResults } = findAreaByName(jsonList, suburbName, provinceName);
-                    suburbs.push(...searchResults);
-
+                    suburbs.forEach(suburb => {
+                        if (mapSuburbs[suburb.sid.trim()] === undefined) {
+                            mapSuburbs[suburb.sid] = 0;
+                            suburb.sid.replace(' ', '-')
+                            uniqueList.push(suburb);
+                        }
+                        mapSuburbs[suburb.sid]++;
+                    })
+                    // console.table(jsonList);
+                    // const { searchResults } = findAreaByName(jsonList, suburbName, provinceName);
+                    // return;
                     // searchResults.length != 0 ? search[fileName] = searchResults.length : ''; // This line will find use one day!.
 
                 });
-                resolve({ suburbs });
+                // console.log(mapSuburbs);
+                resolve(uniqueList);
             }
         })
     })
@@ -64,37 +83,17 @@ class SheetManager {
      * @param {string} areaId
      * @returns 
      */
-    extractLoadsheddingScheduleFromSheet = areaId => new Promise(async (resolve) => {
+    static extractLoadsheddingScheduleFromSheet = () => new Promise(async (resolve) => {
         fs.readdir('./files/', { encoding: 'utf8' }, (err, files) => {
             if (err) console.error(err);
-            files.forEach(fileName => {
-                const workbook = XLSX.readFile(`./files/${fileName}`, { cellFormula: true, sheetStubs: true });
-
-                const suburbSheetName = workbook.SheetNames[3];
-                const suburbSheet = workbook.Sheets[suburbSheetName];
-                const jsonList = XLSX.utils.sheet_to_json(suburbSheet);
-
-                const provinceRange = XLSX.utils.decode_range('A6');
-                const province = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { range: provinceRange, header: 1 });
-                const provinceName = province[0][0];
-
-                const results = findAreaById(jsonList, areaId, provinceName);
-                if (results.hasOwnProperty('id')) {
-                    const scheduleName = workbook.SheetNames[0];
-                    const scheduleSheet = workbook.Sheets[scheduleName];
-                    const loadsheddingRange = XLSX.utils.decode_range('A16:AH111');
-                    const loadsheddingJsonData = XLSX.utils.sheet_to_json(scheduleSheet, { range: loadsheddingRange, header: 1 });
-
-                    resolve({ schedule: loadsheddingJsonData, area: results });
-                }
-            });
+            const workbook = XLSX.readFile(`./files/${files[0]}`, { cellFormula: true, sheetStubs: true });
+            const scheduleName = workbook.SheetNames[0];
+            const scheduleSheet = workbook.Sheets[scheduleName];
+            const loadsheddingRange = XLSX.utils.decode_range('A16:AH111');
+            const loadsheddingJsonData = XLSX.utils.sheet_to_json(scheduleSheet, { range: loadsheddingRange, header: 1 });
+            resolve(loadsheddingJsonData);
         })
     })
-
-    extractAllSuburbs = () => {
-
-    }
-
 }
 
 module.exports = SheetManager;

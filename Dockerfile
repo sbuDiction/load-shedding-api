@@ -4,7 +4,6 @@ FROM node:slim
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
-# Install Google Chrome Stable and fonts
 # Note: this installs the necessary libs to make the browser work with Puppeteer.
 RUN apt-get update && apt-get install gnupg wget -y && \
   wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
@@ -16,11 +15,11 @@ RUN apt-get update && apt-get install gnupg wget -y && \
 COPY  . .
 
 RUN npm install
-# RUN npm uninstall puppeteer
-# RUN npm uninstall puppeteer
+
+RUN npx prisma generate
+
+RUN npx prisma migrate dev --name init
+
 ENV PORT=5000
-ENV REDIS_PORT=6379
-ENV REDIS_HOST=redis://localhost:6379
-ENV VAPID_PUBLIC_KEY=BOchB104AR9n2X1Zc_h2C-zSA5jou83nt6VQq7nCf097yj6aOWoXVKM5us7vOb0j8-B-VUMJD9MheNQlmJscrFQ
-ENV VAPID_PRIVATE_KEY=5RlXatmGcgumVFL12AAJmFkLunDO_yY_asYxk8bjzso
+
 CMD [ "npm", "start" ]

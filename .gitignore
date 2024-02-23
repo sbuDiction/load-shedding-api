@@ -1,6 +1,10 @@
 node_modules
 .vscode
 .ipynb_checkpoints
-.env
 .cache
 .git
+.env
+.env.local
+.env.production
+migrations
+dev.db

@@ -1,0 +1,25 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Suburbs {
+  id     Int    @id @default(autoincrement())
+  sid    String @unique
+  name   String
+  region String
+  block  Int
+}
+
+model LoadSheddingStatus {
+  id     Int @id @default(1)
+  status Int @default(0)
+}

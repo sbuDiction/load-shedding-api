@@ -5,19 +5,31 @@ const crypto = require('crypto');
  * @param {{start: number, end: number}} time Fractions of a day with start time and end time
  * @returns TimeStamp{}
  */
-const timeConversion = time => {
+const timeConversion = (time, adjustTimeZone = false) => {
     const referenceTime = new Date(0); // Epoch time
-    // Given values with 1 hour subtracted 
+    // Given values with 1 hour subtracted
+    // const adjustTimeZone = process.env.TIME_ZONE | false;
     let startTime = time['start'] - 1 / 24
     let endTime = time['end'] - 1 / 24
+    // console.log('Before start:', startTime);
+    // console.log('Before end', endTime);
 
+    // console.log('After start:', startTime);
+    // console.log('After end', endTime);
     // Convert fractions of a day to milliseconds
-    const milliseconds1 = Math.round(startTime * 24 * 60 * 60 * 1000);
-    const milliseconds2 = Math.round(endTime * 24 * 60 * 60 * 1000);
+    const milliseconds1 = Math.round(startTime * 24 * 60 * 60 * 1000)
+    const milliseconds2 = Math.round(endTime * 24 * 60 * 60 * 1000)
+
 
     // Calculate new times
-    const start = new Date(referenceTime.getTime() + milliseconds1);
-    const end = new Date(referenceTime.getTime() + milliseconds2);
+    const start = new Date(referenceTime.getTime() + milliseconds1)
+    const end = new Date(referenceTime.getTime() + milliseconds2)
+
+    if (adjustTimeZone) {
+        start.setHours(start.getHours() - 1);
+        end.setHours(end.getHours() - 1);
+    }
+
 
     // Format times as strings
     const formattedTime1 = start.toLocaleTimeString();

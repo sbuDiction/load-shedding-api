@@ -6,9 +6,8 @@ const puppeteer = require('puppeteer');
 const getLoadSheddingStatus = async () => new Promise(async resolve => {
     try {
         // Launch the browser and open a new blank page
-        console.log('launching chrome...');
         const browser = await puppeteer.launch({
-            executablePath: '/usr/bin/google-chrome',
+            executablePath: process.env.CHROME_PATH | '',
             args: ['--no-sandbox']
         });
         const page = await browser.newPage();

@@ -15,6 +15,12 @@ app.use('/search', searchRouter);
 app.use('/schedule', scheduleRouter);
 app.use('/subscription', subcriptionRouter);
 
+app.get('/', async (req, res) => {
+    res.status(200).json({
+        status: 'API running...'
+    })
+});
+
 new LoadSheddingStatusMonitor();
 
 

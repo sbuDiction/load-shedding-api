@@ -3,6 +3,7 @@ const cors = require('cors');
 
 const searchRouter = require('./routes/search.router');
 const scheduleRouter = require('./routes/schedule.router');
+const StatusRouter = require('./routes/status.router');
 const subcriptionRouter = require('./routes/subscription.router');
 const LoadSheddingStatusMonitor = require('./LoadSheddingStatusMonitor');
 
@@ -13,6 +14,7 @@ app.use(cors());
 
 app.use('/search', searchRouter);
 app.use('/schedule', scheduleRouter);
+app.use('/status', StatusRouter);
 app.use('/subscription', subcriptionRouter);
 
 app.get('/', async (req, res) => {

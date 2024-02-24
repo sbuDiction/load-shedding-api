@@ -36,7 +36,7 @@ class LoadSheddingStatusMonitor {
         });
     }
 
-    checkCurrentStatus = async () => {
+  static  checkCurrentStatus = () => new Promise(async resolve => {
         console.log('Fetching load shedding status');
         await getLoadSheddingStatus().then(status => {
             console.log('Status is:', status);
@@ -58,10 +58,13 @@ class LoadSheddingStatusMonitor {
                         console.log(res.status);
                     })
                     // pushServiceEevent.emit('load shedding stage changed');
+                    resolve(status)
+                } else {
+                    resolve(status);
                 }
             });
         });
-    }
+    })
 }
 
 module.exports = LoadSheddingStatusMonitor;

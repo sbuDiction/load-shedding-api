@@ -23,5 +23,4 @@ app.get('/', async (req, res) => {
 
 new LoadSheddingStatusMonitor();
 
-
 module.exports = app;

@@ -6,4 +6,3 @@ const { join } = require('path');
 module.exports = {
   cacheDirectory: join(__dirname, '.cache', 'puppeteer'),
 };
-console.log(join(__dirname, '.cache', 'puppeteer'));

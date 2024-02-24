@@ -6,11 +6,12 @@ class SearchController {
 
         try {
             const { text } = req.query;
+            const to_tsquery = text.replace(' ', '|');
             await prismaClient.$queryRaw`
             SELECT *
             FROM "Suburbs"
-            ORDER BY SIMILARITY(name, ${text})
-            DESC 
+            WHERE to_tsvector('english', name) @@ to_tsquery(${to_tsquery})
+            ORDER BY ts_rank(to_tsvector('english', name), to_tsquery(${to_tsquery})) DESC
             LIMIT 5;
             `.then(data => {
                 res.status(200)

@@ -1,9 +1,7 @@
-const { Prisma } = require('@prisma/client');
 const prismaClient = require('../prismaClient');
 
 class SearchController {
     static searchByText = async (req, res) => {
-
         try {
             const { text } = req.query;
             const to_tsquery = text.replace(' ', '|');

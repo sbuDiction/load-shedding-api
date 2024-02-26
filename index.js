@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { useTreblle } = require('treblle');
 
 const searchRouter = require('./routes/search.router');
 const scheduleRouter = require('./routes/schedule.router');

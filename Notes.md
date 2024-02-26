@@ -22,3 +22,14 @@
 * **LinkedIn for temp workers** 
     * ### Features
     * video content tips about handy work
+
+
+
+
+This API directly links to Eskom's Load-shedding schedule spreadsheets available from the Eskom Load shedding website, This API offers real-time Load shedding status and schedules for all South African regions supplied by Direct Eskom. Enhance your applications or services with the following:
+Accuracy & Timeliness: Official data source ensures reliable updates.
+Operational Efficiency: Automate processes based on real-time data.
+Easy-to-use API.
+
+
+This is the link to the documentation of the API on how you can test it yourself and see how it works.

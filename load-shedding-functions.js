@@ -164,6 +164,7 @@ const getCurrentLoadShedding = (schedule, suburb, loadSheddingStage, adjustTime)
     });
 
     let scheduleMap = {
+        stage: loadSheddingStage,
         suburb: {
             name: suburb['name'],
             region: suburb['region']

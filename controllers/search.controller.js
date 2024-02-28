@@ -10,7 +10,7 @@ class SearchController {
             FROM "Suburbs"
             WHERE to_tsvector('english', name) @@ to_tsquery(${to_tsquery})
             ORDER BY ts_rank(to_tsvector('english', name), to_tsquery(${to_tsquery})) DESC
-            LIMIT 5;
+            -- LIMIT 5;
             `.then(data => {
                 res.status(200)
                     .json({

@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { useTreblle } = require('treblle');
+// const { useTreblle } = require('treblle');
 
 const searchRouter = require('./routes/search.router');
 const scheduleRouter = require('./routes/schedule.router');
@@ -10,13 +10,13 @@ const LoadSheddingStatusMonitor = require('./LoadSheddingStatusMonitor');
 
 const app = express();
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-useTreblle(app, {
-    apiKey: process.env.apiKey,
-    projectId: process.env.projectId,
-})
+// useTreblle(app, {
+//     apiKey: process.env.apiKey,
+//     projectId: process.env.projectId,
+// })
 
 app.use('/search', searchRouter);
 app.use('/schedule', scheduleRouter);

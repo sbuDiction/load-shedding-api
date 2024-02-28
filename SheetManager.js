@@ -2,14 +2,15 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2024-01-31 21:22:37 
  * @Last Modified by: sibusiso.nkosi
- * @Last Modified time: 2024-02-23 09:14:58
+ * @Last Modified time: 2024-02-28 08:10:04
  */
 
 const fs = require('fs');
 const XLSX = require('xlsx');
+const GenerateAreaName = require('./utils/generate-area-name');
+const GenerateSuburbId = require('./utils/generate-sid');
 
 /**
- * @alias  XLSX:number
  */
 class SheetManager {
     /**
@@ -24,8 +25,6 @@ class SheetManager {
                 const uniqueList = [];
                 let mapSuburbs = {}
 
-                // let search = {};
-                let regions = {};
                 files.forEach(async fileName => {
                     // console.log(fileName);
                     const workbook = XLSX.readFile(`./files/${fileName}`, { cellFormula: true, sheetStubs: true });
@@ -57,13 +56,7 @@ class SheetManager {
                         }
                         mapSuburbs[suburb.sid]++;
                     })
-                    // console.table(jsonList);
-                    // const { searchResults } = findAreaByName(jsonList, suburbName, provinceName);
-                    // return;
-                    // searchResults.length != 0 ? search[fileName] = searchResults.length : ''; // This line will find use one day!.
-
                 });
-                // console.log(mapSuburbs);
                 resolve(uniqueList);
             }
         })
@@ -94,6 +87,56 @@ class SheetManager {
             resolve(loadsheddingJsonData);
         })
     })
+
+    static extractCityPowerSuburbs = () => new Promise(resolve => {
+        const suburbs = [];
+        const uniqueList = [];
+        let suburbsMap = {};
+        let extMap = {};
+        const workbook = XLSX.readFile(`./files/Copy of Load Shedding Schedule Version 6 Rev 0.1 Block Areas_.xlsx`, { cellFormula: true, sheetStubs: true, });
+        const suburbsSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(suburbsSheet);
+        jsonData.forEach(suburb => {
+            const suburbName = suburb['Area']
+            const block = suburb['Load Block'];
+            const match = suburbName.match(/\b(\d+),?/g);
+            if (match) {
+                const extensions = match.map(ext => {
+                    return ext.replace(/\D/g, '');
+                });
+                if (extensions.length > 1) {
+                    extensions.forEach(extNumber => {
+                        let extName = GenerateAreaName.generate(suburbName);
+                        const sid = GenerateSuburbId.generateSid(`${extName}, ${extNumber} City of Johannesburg Gauteng ${block}`)
+                        suburbs.push({
+                            sid: sid,
+                            name: extName,
+                            region: `City of Johannesburg, Gauteng`,
+                            block: block
+                        });
+                    });
+                }
+            } else {
+                const sid = GenerateSuburbId.generateSid(`${suburbName} City of Johannesburg  Gauteng ${block}`);
+                suburbs.push({
+                    sid: sid,
+                    name: suburbName,
+                    region: `City of Johannesburg, Gauteng`,
+                    block: block
+                });
+            }
+        })
+
+        suburbs.forEach(suburb => {
+            if (suburbsMap[suburb['sid']] === undefined) {
+                suburbsMap[suburb['sid']] = 0;
+                uniqueList.push(suburb);
+            }
+            suburbsMap[suburb['sid']]++;
+        })
+        resolve(uniqueList)
+    })
+
 }
 
 module.exports = SheetManager;

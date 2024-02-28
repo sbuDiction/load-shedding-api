@@ -4,7 +4,7 @@ class SearchController {
     static searchByText = async (req, res) => {
         try {
             const { text } = req.query;
-            const to_tsquery = text.replace(' ', '|');
+            const to_tsquery = text.replace(' ', '&');
             await prismaClient.$queryRaw`
             SELECT *
             FROM "Suburbs"

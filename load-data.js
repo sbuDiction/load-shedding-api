@@ -4,16 +4,17 @@
 const SheetManager = require("./SheetManager");
 const prismaClient = require("./prismaClient");
 
-// new SheetManager().extractSuburbsFromSheet().then(async suburbs => {
-//     console.log(suburbs.length);
-//     await prismaClient.$transaction(
-//         suburbs.map((suburb) => prismaClient.suburbs.create({ data: suburb }))
-//     );
-// })
+SheetManager.extractEskomDirectSuburbs().then(async suburbs => {
+    console.log(suburbs.length);
+    // await prismaClient.$transaction(
+    //     suburbs.map((suburb) => prismaClient.suburbs.create({ data: suburb }))
+    // );
+})
 
 SheetManager.extractCityPowerSuburbs().then(async suburbs => {
     console.log(suburbs.length);
-    await prismaClient.$transaction(
-        suburbs.map((suburb) => prismaClient.suburbs.create({ data: suburb }))
-    );
+    // await prismaClient.$transaction(
+    //     suburbs.map((suburb) => prismaClient.suburbs.create({ data: suburb }))
+    // );
 })
+

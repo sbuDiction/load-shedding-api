@@ -11,7 +11,7 @@ class ScheduleController {
                 sid: id
             }
         }).then(suburb => {
-            SheetManager.extractLoadsheddingScheduleFromSheet()
+            SheetManager.extractCityPowerSchedule()
                 .then(async scheduleData => {
                     await prismaClient.loadSheddingStatus.findUnique({
                         where: {

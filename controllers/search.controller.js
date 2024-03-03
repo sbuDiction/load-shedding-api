@@ -6,7 +6,7 @@ class SearchController {
             const { text } = req.query;
             const to_tsquery = text.replace(' ', '&');
             await prismaClient.$queryRaw`
-            SELECT *
+            SELECT sid, name, region, block
             FROM "Suburbs"
             WHERE to_tsvector('english', name) @@ to_tsquery(${to_tsquery})
             ORDER BY ts_rank(to_tsvector('english', name), to_tsquery(${to_tsquery})) DESC

@@ -1,37 +1,65 @@
 const puppeteer = require('puppeteer');
+const ScraperUtils = require('./utils/scraper-functions');
 /**
  * 
  * @returns Current load shedding status from the eskom website
  */
-const getLoadSheddingStatus = async () => new Promise(async resolve => {
-    try {
+const getLoadSheddingStatus = async (retries = 0, maxRetries = 3) => {
+    return new Promise(async (resolve, reject) => {
         // Launch the browser and open a new blank page
         const browser = await puppeteer.launch({
-            executablePath: process.env.CHROME_PATH | '',
+            executablePath: process.env.CHROME_PATH || '',
             args: ['--no-sandbox']
         });
-        const page = await browser.newPage();
+        try {
+            const page = await browser.newPage();
 
-        await page.goto('https://loadshedding.eskom.co.za/');
+            const urls = [
+                {
+                    url: 'https://loadshedding.eskom.co.za/',
+                    elem: '#lsstatus'
+                },
+                {
+                    url: 'https://www.eskom.co.za/',
+                    elem: '.eskom-ls-text'
+                }
+            ];
 
-        // Wait for the span with a specific id to be present in the DOM
-        const loadSheddingStatusSelector = '#lsstatus'; // Replace 'yourSpanId' with the actual id
-        await page.waitForSelector(loadSheddingStatusSelector);
+            let currentUrl = urls[retries];
+            console.log(`Scraping: ${currentUrl['url']}`);
+            await page.goto(currentUrl['url']);
 
-        // Extract text content from the span
-        const loadSheddingStage = await page.$eval(loadSheddingStatusSelector, (span) => span.textContent);
-        const splitText = loadSheddingStage.split(' ');
+            // Wait for the span with a specific id to be present in the DOM
+            const loadSheddingStatusSelector = `${currentUrl['elem']}`; // Replace 'yourSpanId' with the actual id
+            await page.waitForSelector(loadSheddingStatusSelector);
 
-        await browser.close();
-        const status = Number(splitText[splitText.length - 1]);
-        if (Number.isNaN(status)) resolve(0);
-        resolve(status);
+            // Extract text content from the span
+            const loadSheddingStage = await page.$eval(loadSheddingStatusSelector, (elem) => elem.textContent);
 
-    } catch (error) {
-        // Handle network errors or unkown errors
-        console.log(error);
-    }
-})
+            await browser.close();
+
+            const status = Number(ScraperUtils.findStage(loadSheddingStage));
+
+            if (Number.isNaN(status)) resolve(0);
+            resolve(status);
+
+        } catch (error) {
+            // Handle network errors or unknown errors
+            console.log(`Error occured retries remaining ${maxRetries}`);
+
+            if (retries < maxRetries - 1) {
+                // Attempt retry with a different URL from the list
+                retries++;
+                resolve(await getLoadSheddingStatus(retries, maxRetries));
+            } else {
+                reject(error); // All retries exhausted, reject the promise
+            }
+        } finally {
+            await browser.close(); // Ensure browser is always closed
+        }
+    });
+};
+
 
 module.exports = {
     getLoadSheddingStatus

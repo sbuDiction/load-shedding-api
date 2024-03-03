@@ -4,11 +4,12 @@ const { getLoadSheddingStatus } = require("./web-scraper");
 
 class LoadSheddingStatusMonitor {
     constructor() {
-        // this.checkCurrentStatus();
+        LoadSheddingStatusMonitor.checkCurrentStatus();
         this.monitor();
     }
     monitor = async () => {
         // Check for load shedding stage everyday at 16:00pm
+        console.log('Setting up load shedding status cron job for 16:00 PM');
         const cronExpression = '0 16 * * *';
         cron.schedule(cronExpression, () => {
             (async () => {
@@ -36,7 +37,7 @@ class LoadSheddingStatusMonitor {
         });
     }
 
-  static  checkCurrentStatus = () => new Promise(async resolve => {
+    static checkCurrentStatus = () => new Promise(async resolve => {
         console.log('Fetching load shedding status');
         await getLoadSheddingStatus().then(status => {
             console.log('Status is:', status);

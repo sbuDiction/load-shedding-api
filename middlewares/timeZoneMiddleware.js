@@ -9,7 +9,7 @@ class TimeZoneMiddleware {
                 sid: id
             }
         }).then(suburb => {
-            const suburbRegion = suburb.region.split(',')[1]
+            const suburbRegion = suburb.region.split(',')[2]
             const isTimeZone = TimeZones["SAET+1"].findIndex(zone => zone.includes(suburbRegion.trim()))
             if (isTimeZone === -1) {
                 req.isAdjust = true;

@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2024-01-31 21:22:37 
  * @Last Modified by: sibusiso.nkosi
- * @Last Modified time: 2024-03-03 11:40:26
+ * @Last Modified time: 2024-03-03 21:51:07
  */
 
 const fs = require('fs');
@@ -65,7 +65,7 @@ class SheetManager {
      * @returns 
      */
     static extractEskomDrirectSchedule = () => new Promise(async (resolve) => {
-        const workbook = XLSX.readFile(`./sheets/schedule-sheets/city-power/Eskom Schedule.xlsx`, { cellFormula: true, sheetStubs: true });
+        const workbook = XLSX.readFile(`./sheets/schedule-sheets/Eskom Schedule.xlsx`, { cellFormula: true, sheetStubs: true });
         const scheduleName = workbook.SheetNames[0];
         const scheduleSheet = workbook.Sheets[scheduleName];
         const loadsheddingRange = XLSX.utils.decode_range('A16:AH111');

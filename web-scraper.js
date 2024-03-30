@@ -8,7 +8,7 @@ const getLoadSheddingStatus = async (retries = 0, maxRetries = 3) => {
     return new Promise(async (resolve, reject) => {
         // Launch the browser and open a new blank page
         const browser = await puppeteer.launch({
-            executablePath: process.env.CHROME_PATH || '',
+            // executablePath: process.env.CHROME_PATH || '',
             args: ['--no-sandbox']
         });
         try {

@@ -4,7 +4,7 @@ const { getLoadSheddingStatus } = require("./web-scraper");
 
 class LoadSheddingStatusMonitor {
     constructor() {
-        LoadSheddingStatusMonitor.checkCurrentStatus();
+        // LoadSheddingStatusMonitor.checkCurrentStatus();
         this.monitor();
     }
     monitor = async () => {

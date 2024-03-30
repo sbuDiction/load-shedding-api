@@ -10,3 +10,4 @@ migrations
 dev.db
 coverage
 ~$Eskom Schedule.xlsx
+dist

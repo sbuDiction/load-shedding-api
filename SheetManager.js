@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2024-01-31 21:22:37 
  * @Last Modified by: sibusiso.nkosi
- * @Last Modified time: 2024-03-03 21:51:07
+ * @Last Modified time: 2024-03-16 22:57:13
  */
 
 const fs = require('fs');
@@ -69,6 +69,7 @@ class SheetManager {
         const scheduleName = workbook.SheetNames[0];
         const scheduleSheet = workbook.Sheets[scheduleName];
         const loadsheddingRange = XLSX.utils.decode_range('A16:AH111');
+        XLSX.utils.sheet_to_csv()
         const loadsheddingJsonData = XLSX.utils.sheet_to_json(scheduleSheet, { range: loadsheddingRange, header: 1 });
         resolve(loadsheddingJsonData);
     })

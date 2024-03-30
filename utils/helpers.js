@@ -28,8 +28,8 @@ const timeConversion = (time, adjustTimeZone = false) => {
         end = moment(0).tz(timeZone).add(milliseconds2, 'milliseconds').subtract(1, 'hours');
     }
     // Format times as strings
-    const formattedTime1 = start.format('HH:mm A');
-    const formattedTime2 = end.format('HH:mm A');
+    const formattedTime1 = start.format('HH:mm');
+    const formattedTime2 = end.format('HH:mm');
 
     return { start: formattedTime1, end: formattedTime2 };
 }
@@ -65,6 +65,8 @@ const generateIdFromCoordinates = (coordinates) => {
 
     return hash;
 }
+
+
 
 
 

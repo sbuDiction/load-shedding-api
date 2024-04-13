@@ -1,33 +1,33 @@
-# South African Load Shedding API 1.0.0
+# Load Shedding API SA
 
-## Featrues
+### Introduction
 
-- Suburb Search By Text
-- Search Nearby Using GPS Coordinates (Experimental)
-- Real Time Status For Load Shedding
-- Real time status per Suburb, Upcoming Schedule
-    
+This is the load-shedding API for South Africa you can use this API to search suburbs that get electricity supply from DIRECT ESKOM. 
+The API provides information about Load Shedding schedules for a suburb for up to 7 days, 
+It is still in development so it's not yet perfect I currently have 36095 suburbs and I will continue to add more. 
+Some suburbs/Areas are not yet available because they have a different supplier for example some areas in Gauteng get their electricity via City Power Johannesburg etc... I still need to write the code to extract the areas.
 
-## Responses
+### Features
 
-| **HTTP Code** | **Description** |
-| --- | --- |
-| 200 | OK |
-| 201 | Created |
-| 400 | Bad Request |
-| 404 | Not Found |
-| 500 | Internal Server Error |
+* Users can search suburb/area by text
+* Users can get the current Load Shedding stage status
+* Users can fetch Load Shedding schedules for their suburb/area for up to 7 days in advance
 
-##
-Full Documentaion Hosted on [Postman](https://documenter.getpostman.com/view/11585940/2sA2r7zi4R) 
+### API Endpoints
 
+| HTTP Verbs | Endpoints | Action |
+| --- | --- | --- |
+| GET | /search?text=search_query | To search for a suburb/area |
+| GET | /schedule?id=suburb_id | To get Load Shedding schedules |
+| GET | /status | To get current Load Shedding stage status |
 
-I was curious how apps like Eskom Se Push know load-shedding schedules, at some point I thought maybe Eskom has an API where they provide load-shedding information but I was wrong I recently found out that Eskom sends out spreadsheets for each province containing load-shedding information for a whole year and then I thought to myself is it really possible to write code that can extract data from a spreadsheet and turn it into an API that can be used to develop apps for load-shedding. I answered this question by creating the API and it was a success. However, it still has some limitations like the missing areas that Direct Eskom does not supply places like in Gauteng that get power from City Power Johannesburg, etc.. At the moment the API has 36095 suburbs all from Direct Eskom I will be adding more suburbs as time goes by.
+### Technologies Used
 
-
-
-You can check the documentation here: https://documenter.getpostman.com/view/11585940/2sA2r7zi4R
-
-
-
-Linkedin: https://lnkd.in/dsK9P7KG
+- ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+- ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+- ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
+- ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+- ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+- ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
+- ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)
+- ![Microsoft Excel](https://img.shields.io/badge/Microsoft_Excel-217346?style=for-the-badge&logo=microsoft-excel&logoColor=white)

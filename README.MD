@@ -3,7 +3,7 @@
 ### Introduction
 
 This is the load-shedding API for South Africa you can use this API to search suburbs that get electricity supply from DIRECT ESKOM. 
-The API provides information about Load Shedding schedules for a suburb for up to 7 days, 
+The API provides information about Load Shedding schedules for suburbs, 
 It is still in development so it's not yet perfect I currently have 36095 suburbs and I will continue to add more. 
 Some suburbs/Areas are not yet available because they have a different supplier for example some areas in Gauteng get their electricity via City Power Johannesburg etc... I still need to write the code to extract the areas.
 
